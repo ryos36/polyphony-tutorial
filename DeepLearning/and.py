@@ -1,7 +1,7 @@
 from polyphony import testbench
 
 def AND(x1, x2):
-    w1, w2, theta = 5, 5, 7
+    w1, w2, theta = 2, 2, 3
     tmp = x1*w1 + x2*w2
     if tmp <= theta:
         return 0

@@ -13,18 +13,22 @@ def arange(lst_r, x0, sv):
         lst_r[i] = x0
         x0 = x0 + sv
 
-def test_step():
+def test_step(a):
     lst_r = [0] * 101
     lst_a = [0] * 101
-    print(lst_a)
+#    print(lst_a)
     arange(lst_a, -50, 1)
-    print(lst_a)
+#    print(lst_a)
     step(lst_r, lst_a)
-    print(lst_r)
+#    print(lst_r)
+    return a + 1
         
 
 @testbench
 def test():
-    test_step()
+    tmp = test_step(1)
+    print(tmp)
+    tmp = test_step(2)
+    print(tmp)
 
 test()
