@@ -13,33 +13,22 @@ def arange(lst_r, x0, sv):
         lst_r[i] = x0
         x0 = x0 + sv
 
-def sum(lst):
-    s = 0
-    for i in range(len(lst)):
-        #a = lst[i]
-        #s = s + a * a
-        s = s + lst[i] * lst[i]
-    return s
-
-def step_test(r):
+def test_step(a):
     lst_r = [0] * 101
     lst_a = [0] * 101
-    s = sum(lst_a)
-    r[0] = s
+#    print(lst_a)
     arange(lst_a, -50, 1)
-    s = sum(lst_a)
-    r[1] = s
+#    print(lst_a)
     step(lst_r, lst_a)
-    s = sum(lst_r)
-    r[2] = s
-    return sum(r)
+#    print(lst_r)
+    return a + 1
+        
 
 @testbench
 def test():
-    r = [0] * 3
-    tmp = step_test(r)
+    tmp = test_step(1)
     print(tmp)
-    tmp = step_test(r)
+    tmp = test_step(2)
     print(tmp)
 
 test()

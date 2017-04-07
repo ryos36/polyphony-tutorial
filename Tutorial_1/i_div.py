@@ -110,8 +110,6 @@ def test():
 #    print("result:", result/128)
     x = 256
     y =   5
-    print(i_bit_width(x)) 
-    print(i_bit_width(y)) 
     result = i_div(x << shift_n, y << shift_n)
     print("result:", result)
 #    print("result:", result/(1 << shift_n))
