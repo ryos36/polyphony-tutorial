@@ -5,7 +5,7 @@ def mul_add(a, b, c, d):
 
 @testbench
 def test():
-    assert 19 == mul_add(1, 2, 3, 4)
+    assert 14 == mul_add(1, 2, 3, 4)
     assert 62 == mul_add(4, 5, 6, 7)
 
 test()
