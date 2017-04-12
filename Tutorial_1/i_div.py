@@ -1,6 +1,6 @@
 from polyphony import testbench
 
-shift_n = 7
+shift_n = 24
 
 def i_bit_width_prim(x, shr_n, mask_n, cmp_n, first_b):
     b8 = first_b
@@ -43,59 +43,47 @@ def i_bit_width(x):
 def i_div(x, y):
     abs_x_bw = i_bit_width(x)
     abs_y_bw = i_bit_width(y)
-    print("width ", abs_x_bw, abs_y_bw)
     rv = 0
-    if abs_y_bw > abs_x_bw:
-        return 0
-    diff_bw = abs_x_bw - abs_y_bw
     msb = (x & 0x80000000) ^ (y & 0x80000000)
     abs_x = x & 0x7FFFFFFF
     abs_y = y & 0x7FFFFFFF
+
     iter_x = abs_x
-    iter_y = abs_y << diff_bw 
-    check_bit = 1 << (abs_x_bw - 1)
+    if abs_x_bw >= abs_y_bw:
+        diff_bw = abs_x_bw - abs_y_bw
+        iter_y = abs_y << diff_bw 
+        do_iter_n = diff_bw + 1
+    else:
+        diff_bw = 0
+        iter_y = abs_y
+        do_iter_n = 0
+
     print("div ", iter_x >> shift_n, abs_y, diff_bw, iter_y >> shift_n)
-    for i in range(0, diff_bw + 1):
-        if iter_x >= iter_y:
-            print(iter_x, iter_y, 1)
-        else:
-            print(iter_x, iter_y, 0)
+    for i in range(0, do_iter_n):
 
         rv <<= 1
         if iter_x >= iter_y:
             rv += 1
             iter_x -= iter_y
             if iter_x == 0:
-                print("rv: ", rv)
                 rv <<= (diff_bw - i)
-                print("rv2: ", rv)
                 break
 
         iter_y >>= 1
-        check_bit >>= 1
 
-    print("seisu:", rv)
 
     if iter_x :
         iter_x <<= shift_n
         iter_y = abs_y << (shift_n - 1)
-        check_bit = 1 << (abs_y_bw + shift_n - 1)
-        print("shousu:", iter_x, iter_y, check_bit)
         for i in range(0, shift_n):
-            if iter_x >= iter_y:
-                print(iter_x, iter_y, 1, rv)
-            else:
-                print(iter_x, iter_y, 0, rv)
             rv <<= 1
             if iter_x >= iter_y:
                 rv += 1
                 iter_x -= iter_y
                 if iter_x == 0:
-                    print("break rv:", (shift_n - i), rv)
-                    rv <<= (shift_n - i)
+                    rv <<= (shift_n - i - 1)
                     break
             iter_y >>= 1
-            check_bit >>= 1
     else:
         rv <<= shift_n
 
@@ -108,9 +96,24 @@ def test():
 #    result = i_div(x << shift_n, y << shift_n)
 #    print("result:", result)
 #    print("result:", result/128)
+
+#131.25 25.0
     x = 256
     y =   5
-    result = i_div(x << shift_n, y << shift_n)
+    x = 25600
+    y =   500
+    x = 16800
+    y =  3200
+    x = 168
+    y =  32
+    x = 161
+    y =  32
+    x =  5
+    y =  2
+#    x = int(27.5625 * 256.0)
+#    y = int(14.5 * 256.0)
+    xshift_n = shift_n - 8
+    result = i_div(x << xshift_n, y << xshift_n)
     print("result:", result)
 #    print("result:", result/(1 << shift_n))
 
