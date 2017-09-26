@@ -3,6 +3,8 @@ import sys
 import os
 import traceback
 import subprocess
+import types
+
 
 IVERILOG_PATH = 'iverilog'
 ROOT_DIR = '.' + os.path.sep
@@ -17,8 +19,14 @@ from polyphony.compiler.env import env
 def exec_test(casefile_path, output=True, compile_only=False):
     casefile = os.path.basename(casefile_path)
     casename, _ = os.path.splitext(casefile)
+    options = types.SimpleNamespace()
+    options.output_name = casename
+    options.output_dir = TMP_DIR
+    options.verbose_level = 0
+    options.quiet_level = 0
+    options.debug_mode = output
     try:
-        compile_main(casefile_path, casename, TMP_DIR, debug_mode=output)
+        compile_main(casefile_path, options)
     except Exception as e:
         print('[COMPILE PYTHON] FAILED:' + casefile_path)
         if env.dev_debug_mode:
@@ -27,8 +35,12 @@ def exec_test(casefile_path, output=True, compile_only=False):
         return
     if compile_only:
         return
+    finishes = []
     for testbench in env.testbenches:
-        simulate_verilog(testbench.orig_name, casename, casefile_path, output)
+        result_lines = simulate_verilog(testbench.orig_name, casename, casefile_path, output)
+        if result_lines:
+            finishes.append(result_lines[-2])
+    return finishes
 
 
 def simulate_verilog(testname, casename, casefile_path, output):
@@ -50,9 +62,11 @@ def simulate_verilog(testname, casename, casefile_path, output):
                 print(line)
             if 'FAILED' in line:
                 raise Exception()
+        return lines
     except Exception as e:
         print('[SIMULATION] FAILED:' + casefile_path)
         print(e)
+    return None
 
 
 if __name__ == '__main__':
