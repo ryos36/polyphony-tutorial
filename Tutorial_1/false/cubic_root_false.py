@@ -28,7 +28,7 @@ def test():
     x = 27
     result = cubic_root(x)
     if result :
-        print(result)
+        print("cubic_root", result)
     else:
         print(x, 'is not a perfect cube')
 

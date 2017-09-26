@@ -4,8 +4,8 @@ Welcome to "Polyphony Tutorial" - a tutorial for Polyphony, which is Python base
 
 Requirements
 ------------
-- Python 3.x
-- Polyphony 0.3.0
+- Python 3.4 or later
+- Polyphony 0.3.2
 
 Installation
 ------------
