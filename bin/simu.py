@@ -9,7 +9,7 @@ import types
 IVERILOG_PATH = 'iverilog'
 ROOT_DIR = '.' + os.path.sep
 TEST_DIR = ROOT_DIR + 'tests'
-TMP_DIR  = ROOT_DIR + '.tmp'
+TMP_DIR  = ROOT_DIR + 'work'
 sys.path.append(ROOT_DIR)
 
 from polyphony.compiler.__main__ import compile_main, logging_setting
