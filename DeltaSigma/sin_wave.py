@@ -26,9 +26,7 @@ table = make_sin_table()
 
 @polyphony.module
 class sin_wave:
-    #@pure
     def __init__(self):
-        #self.o_data = Port(int8, 'out', protocol='ready_valid')
         self.o_port  = Port(int8, 'out', protocol='none')
         self.o_pulse  = Port(bit, 'out', protocol='none')
         self.append_worker(self.sin_wave_worker, self.o_port, self.o_pulse)
