@@ -40,13 +40,14 @@ def test(m):
     for i in range(10):
         rv = 0
         shift_n = 0
-        b = [0] * 32
+        #b = [0] * 32
         m.i_start.wr(1)
         m.i_start.wr(0)
+        clkfence()
         for i in range(32):
-            b[i] = m.o_data.rd()
-        for i in range(32):
-            rv = rv + (b[i] << shift_n)
+            #b[i] = m.o_data.rd()
+            bb = m.o_data.rd()
+            rv = rv + (bb << shift_n)
             shift_n = shift_n + 1
         print("xor shift:", rv)
         clksleep(100)
