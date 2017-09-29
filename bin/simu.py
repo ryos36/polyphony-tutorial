@@ -16,7 +16,7 @@ from polyphony.compiler.__main__ import compile_main, logging_setting
 from polyphony.compiler.env import env
 
 
-def exec_test(casefile_path, output=False, compile_only=True):
+def exec_test(casefile_path, output=True, compile_only=True):
     casefile = os.path.basename(casefile_path)
     casename, _ = os.path.splitext(casefile)
     options = types.SimpleNamespace()

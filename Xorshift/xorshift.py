@@ -9,7 +9,7 @@ from polyphony.timing import clksleep, clkfence, wait_rising, wait_falling
 class xorshift:
     def __init__(self, seed):
         self.i_start  = Port(bit, 'in')
-        self.o_data  = Port(bit, 'out', protocol='valid')
+        self.o_data  = Port(bit, 'out', protocol='ready_valid')
         self.append_worker(self.xorshift_worker, seed, self.i_start, self.o_data)
 
     def xorshift_worker(self, seed, i_start, o_data):
