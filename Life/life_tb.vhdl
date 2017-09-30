@@ -2,6 +2,10 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+use iEEE.std_logic_arith.all;
+use iEEE.std_logic_unsigned."-";
+use iEEE.std_logic_unsigned."+";
+
 use IEEE.std_logic_textio.all;
 library std;
 use std.textio.all;
@@ -15,17 +19,22 @@ component life
     port(
         clk  : in std_logic;
         din  : in std_logic_vector(2 downto 0);
-        dout : out std_logic
+        mark_in : in std_logic;
+        dout : out std_logic;
+        mark_out : out std_logic
     );
 end component;
 
     signal clk : std_logic;
-    signal data0 : std_logic_vector(31 downto 0) := "01000000001010101101110110101011";
+    signal data0 : std_logic_vector(31 downto 0) := "10000000001010101101110110101011";
     signal data1 : std_logic_vector(31 downto 0) := "01111111111010101101110110001011";
-    signal data2 : std_logic_vector(31 downto 0) := "00000000001010101101110110101011";
+    signal data2 : std_logic_vector(31 downto 0) := "11000000001010101101110110101011";
 
     signal din : std_logic_vector(2 downto 0);
     signal result : std_logic;
+    signal mark_in : std_logic;
+    signal mark_out : std_logic;
+    signal counter : std_logic_vector(2 downto 0) := "000";
     
     constant clk_period : time := 10 ns;
 begin
@@ -38,7 +47,9 @@ port map (
     clk => clk,
 
     din => din,
-    dout => result
+    mark_in => mark_in,
+    dout => result,
+    mark_out => mark_out
 );
 
 -------------------------------------------------------------------
@@ -61,12 +72,28 @@ begin
 end process;
 
 -------------------------------------------------------------------
+cnt: process(clk)
+begin
+    if clk'event and clk = '1' then
+        counter <= counter + 1;
+        if mark_in = '1' then
+            mark_in <= '0';
+        end if;
+        if counter = "000" then 
+            mark_in <= '1';
+        end if;
+    end if;
+end process;
+
+-------------------------------------------------------------------
 data_cosumer: process(clk)
     variable line0 : line;
 begin
     if clk'event and clk = '1' then
         write( line0, String'("result:"));
         write( line0, result );
+        write( line0, String'(" "));
+        write( line0, mark_out );
         writeline( output, line0);
     end if;
 end process;
