@@ -20,12 +20,9 @@ component life
 end component;
 
     signal clk : std_logic;
-    signal data0 : std_logic_vector(31 downto 0) 
-     := "01110101111010101101110110101011";
-    signal data1 : std_logic_vector(31 downto 0) 
-     := "01110101111010101101110110101011";
-    signal data2 : std_logic_vector(31 downto 0) 
-     := "01110101111010101101110110101011";
+    signal data0 : std_logic_vector(31 downto 0) := "01000000001010101101110110101011";
+    signal data1 : std_logic_vector(31 downto 0) := "01111111111010101101110110001011";
+    signal data2 : std_logic_vector(31 downto 0) := "00000000001010101101110110101011";
 
     signal din : std_logic_vector(2 downto 0);
     signal result : std_logic;
