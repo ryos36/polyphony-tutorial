@@ -18,11 +18,11 @@ architecture RTL of xorshift is
 begin
     process(clk)
     begin
-        if rst_n = '0' then
-            d_en_n <= '1';
-            state <= "0000";
-        else
-            if clk'event and clk = '1' then
+        if clk'event and clk = '1' then
+            if rst_n = '0' then
+                d_en_n <= '1';
+                state <= "0000";
+            else
                 case state is
                     when "0000" =>
                         if kick_n = '0' then

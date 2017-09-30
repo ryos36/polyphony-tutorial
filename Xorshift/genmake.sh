@@ -10,7 +10,7 @@ GHDL_FLAGS="--std=08 --ieee=standard"
 #ghdl -i $GHDL_FLAGS --work=unisim unisims/primitive/*.vhd
 #ghdl -i $GHDL_FLAGS --work=unimacro unimacro/*.vhd
 
-SOURCES="xorshift.vhdl xorshift_tb.vhdl"
+SOURCES="xorshift.vhdl xorshift16.vhdl xorshift8.vhdl xorshift_tb.vhdl"
 for i in $SOURCES
 do
         echo ghdl -a $GHDL_FLAGS $i

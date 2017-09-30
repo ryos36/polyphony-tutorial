@@ -21,11 +21,31 @@ component xorshift
     );
 end component;
 
+component xorshift16
+    port(
+        clk    : in std_logic;
+        rst_n  : in std_logic;
+        kick_n : in std_logic;
+        d_en_n : out std_logic; 
+        data   : out std_logic_vector(3 downto 0)
+    );
+end component;
+
+component xorshift8
+    port(
+        clk    : in std_logic;
+        kick_n : in std_logic;
+        d_en_n : out std_logic; 
+        data   : out std_logic_vector(7 downto 0)
+    );
+end component;
+
     signal clk : std_logic;
     signal rst_n : std_logic;
     signal kick_n : std_logic;
     signal d_en_n : std_logic;
     signal data : std_logic_vector(3 downto 0);
+    signal data8 : std_logic_vector(7 downto 0);
 
     signal d_en_n_d : std_logic;
 
@@ -35,15 +55,14 @@ end component;
 begin
 
 -------------------------------------------------------------------
-xorshift0 : xorshift
+xorshift0 : xorshift8
 port map (
     clk => clk,
-    rst_n => rst_n,
 
     kick_n  => kick_n,
 
     d_en_n => d_en_n,
-    data => data
+    data => data8
 );
 
 -------------------------------------------------------------------
@@ -107,8 +126,9 @@ begin
                 writeline( output, line0);
             end if;
         else
-            result(31 downto 28) <= data;
-            result(27 downto 0) <= result(31 downto 4);
+            result(7 downto 0) <= data8;
+            --result(31 downto 28) <= data;
+            --result(27 downto 0) <= result(31 downto 4);
             --  write( line0, String'("now get data:"));
             --  write( line0, result );
             --  writeline( output, line0);
