@@ -31,7 +31,7 @@ module spi_top (
 
     assign red_wire = debug_wire[2];
     //assign debug_wire[1] = green_wire;
-    assign blue_wire = debug_wire[0];
+    assign blue_wire = sbus_led;
 
     always @(posedge clk) begin
         if (sbus_stb) begin

@@ -71,30 +71,33 @@ class system_bus:
         data1 = self.read_data(0x0E)
         return (data0 | data1)
 
-#    def worker(self):
-#        self.debug.wr(7)
-#        clksleep(10)
-#        self.debug.wr(1)
-#
-#        #self.write_data(0x07, 8)
-#        #self.debug.wr(2)
-#
-#        #self.write_data(0x0F, 1)
-#        #self.write_data(0x09, 0x80)
-#        #self.write_data(0x0A, 0x80)
-#        #self.write_data(0x0B, 11)
-#
-#        #clkfence()
-#        #clksleep(10)
-#        #while polyphony.is_worker_running():
-#        #    data16 = self.read_spi_data16()
-#        #    print(data16)
-#
-#        while is_worker_running():
-#            self.led(1)
-#            self._wait()
-#            self.led(0)
-#            self._wait()
+    def worker(self):
+        self.debug.wr(7)
+        clksleep(10)
+        self.debug.wr(1)
+
+        #self.write_data(0x07, 8)
+        #self.debug.wr(2)
+
+        #self.write_data(0x0F, 1)
+        #self.write_data(0x09, 0x80)
+        #self.write_data(0x0A, 0x80)
+        #self.write_data(0x0B, 11)
+
+        #clkfence()
+        #clksleep(10)
+        #while polyphony.is_worker_running():
+        #    data16 = self.read_spi_data16()
+        #    print(data16)
+
+        debug_v:uint3 = 7
+        while is_worker_running():
+            debug_v = 7 ^ debug_v
+            self.debug.wr(debug_v)
+            self.led(1)
+            self._wait()
+            self.led(0)
+            self._wait()
 
     def _wait(self):
         INTERVAL=2000000
