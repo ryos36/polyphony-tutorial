@@ -25,30 +25,37 @@ module spi_top (
 
     //----------------------------------------------------------------
     wire red_wire;
+    wire green_wire_0;
+    wire green_wire_1;
     wire green_wire;
     wire  blue_wire;
     wire [2:0] debug_wire;
 
     assign red_wire = debug_wire[2];
-    //assign debug_wire[1] = green_wire;
-    assign blue_wire = sbus_led;
+    assign green_wire_0 = debug_wire[1];
+    assign blue_wire = debug_wire[0];
+    //assign green_wire = green_wire_0 & green_wire_1;
+    assign green_wire = green_wire_0;
+
+    assign SPI_SCLK = 1'b0;
+    assign SPI_MOSI = green_wire_1;
+    assign SPI_CS_N = green_wire_1;
 
     always @(posedge clk) begin
         if (sbus_stb) begin
             sbus_ack <= 1'b1;
         end 
         if (sbus_ack) begin
-            if (SPI_MISO == 1'b0) begin
-                sbus_ack <= 1'b0;
-            end
+            sbus_ack <= 1'b0;
         end 
+
     end
 
     //----------------------------------------------------------------
     Blink_blink U0 (
       .clk(clk),
       .rst(0),
-      .led(green_wire)
+      .led(green_wire_1)
     );
 
     //----------------------------------------------------------------
