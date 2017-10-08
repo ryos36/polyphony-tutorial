@@ -94,7 +94,7 @@ module spi_top (
     SB_SPI #(.BUS_ADDR74("0b0000"))
       SB_SPI_INST_LT 
        (.SBCLKI(clk),
-        .SBRWI(1'b0),
+        .SBRWI(sbus_rw),
         .SBSTBI(sbus_stb),
         .SBADRI7(sbus_addr[7]),
         .SBADRI6(sbus_addr[6]),

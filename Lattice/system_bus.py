@@ -27,6 +27,7 @@ class system_bus:
         self.rw(1)
         self.addr(addr)
         self.data_out(data)
+        clkfence()
         self.stb(1)
         clkfence()
         wait_value(1, self.ack)
@@ -37,6 +38,7 @@ class system_bus:
         data:uint8 = 0
         self.rw(0)
         self.addr(addr)
+        clkfence()
         self.stb(1)
         clkfence()
         wait_value(1, self.ack)
@@ -46,50 +48,71 @@ class system_bus:
         return data
 
     def read_spi_data16(self):
-        self.write_data(0x06, 8)
+        debug_v:uint3 = 0
+
+        debug_v = 4
+        self.debug.wr(4)
+
+        self.write_data(0x06, 0x18)
         self.write_data(0x0D, 0xFF)
-        while True:
-            status = self.read_data(0x0C)
-            trdy = (status >> 4) & 1
-            if trdy == 1 :
-                break
-        self.write_data(0x0D, 0xFF)
-        while True:
-            irq_status = self.read_data(0x06)
-            irq_rrdy = (status >> 3) & 1
-            if irq_rrdy == 1:
-                self.write_data(0x06, 8)
-                break
-        data0 = self.read_data(0x0E) << 8
 
         while True:
             irq_status = self.read_data(0x06)
-            irq_rrdy = (status >> 3) & 1
+            irq_trdy = (irq_status >> 4) & 1
+            if irq_trdy == 1 :
+                self.write_data(0x06, 0x10)
+                break
+        self.write_data(0x0D, 0xFF)
+        self.debug.wr(5)
+
+        debug_v = 1
+
+        while True:
+            irq_status = self.read_data(0x06)
+            irq_rrdy = (irq_status >> 3) & 1
+            debug_v = 7 ^ debug_v
+            self.debug.wr(debug_v)
             if irq_rrdy == 1:
-                self.write_data(0x06, 8)
+                self.write_data(0x06, 0x08)
+                break
+        data0 = self.read_data(0x0E) << 8
+        debug_v = 2
+        self.debug.wr(2)
+
+        while True:
+            irq_status = self.read_data(0x06)
+            irq_rrdy = (irq_status >> 3) & 1
+            if irq_rrdy == 1:
+                debug_v = 4 ^ debug_v
+                self.debug.wr(debug_v)
+                self.write_data(0x06, 0x08)
                 break
         data1 = self.read_data(0x0E)
+        self.debug.wr(1)
         return (data0 | data1)
 
     def worker(self):
         clksleep(10)
 
-        debug_v:uint3 = 0
-        self.write_data(0x07, 8)
-        debug_v += 1
+        self.debug.wr(1)
+        ack_v = self.ack()
+        self.write_data(0x07, 0x18)
+
+        clksleep(10)
+        status:uint8 = self.read_data(0x07)
+        debug_v:uint8 = ( status >> 2 ) & 0x7
+        #         B   G   R
+        #debug_v = 4 | x | ack_v
         self.debug.wr(debug_v)
+
+        while True:
+            if status == 0xFF:
+                break;
+
         self.write_data(0x0F, 1)
-        debug_v += 1
-        self.debug.wr(debug_v)
         self.write_data(0x09, 0x80)
-        debug_v += 1
-        self.debug.wr(debug_v)
         self.write_data(0x0A, 0x80)
-        debug_v += 1
-        self.debug.wr(debug_v)
         self.write_data(0x0B, 11)
-        debug_v += 1
-        self.debug.wr(debug_v)
 
         clkfence()
         clksleep(10)
