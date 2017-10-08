@@ -11,7 +11,7 @@ module spi_top (
     output wire BLUE_N);
 
     //----------------------------------------------------------------
-    reg sbus_ack;
+    wire sbus_ack;
     wire sbus_stb; 
     wire sbus_rw; 
     wire [7:0] sbus_addr;
@@ -19,9 +19,28 @@ module spi_top (
     wire [7:0] sbus_data_out;
     wire sbus_led;
 
+    wire SPIIRQ_not_used;
+    wire SPIWKUP_not_sued;
+
+    wire SO_not_used; 
+    wire SOE_not_used;
+
+    wire SPI_MO ; 
+    wire SPI_MOoe ; 
+
     //assign sbus_ack = 1'b0;
     //assign sbus_stb = 1'b0;
     //assign sbus_rw = 1'b0;
+
+    wire SPI_SCKo ; 
+    wire SPI_SCKoe ; 
+    wire SPI_SCLKi;
+
+    wire [3:0] SPI_MCSNo; 
+    wire [3:0] SPI_MCSNoe; 
+    wire [3:0] SPI_MCSN;
+
+    assign SPI_SCLK = (SPI_SCKoe ? SPI_SCKo : 1'bz) ; 
 
     //----------------------------------------------------------------
     wire red_wire;
@@ -37,19 +56,18 @@ module spi_top (
     //assign green_wire = green_wire_0 & green_wire_1;
     assign green_wire = green_wire_0;
 
-    assign SPI_SCLK = 1'b0;
-    assign SPI_MOSI = green_wire_1;
-    assign SPI_CS_N = green_wire_1;
+    //assign SPI_SCLK = 1'b0;
+    //assign SPI_MOSI = green_wire_1;
+    //assign SPI_CS_N = green_wire_1;
 
-    always @(posedge clk) begin
-        if (sbus_stb) begin
-            sbus_ack <= 1'b1;
-        end 
-        if (sbus_ack) begin
-            sbus_ack <= 1'b0;
-        end 
-
-    end
+//    always @(posedge clk) begin
+//        if (sbus_stb) begin
+//            sbus_ack <= 1'b1;
+//        end 
+//        if (sbus_ack) begin
+//            sbus_ack <= 1'b0;
+//        end 
+//    end
 
     //----------------------------------------------------------------
     Blink_blink U0 (
@@ -73,56 +91,71 @@ module spi_top (
     );
 
     //----------------------------------------------------------------
-//    SB_SPI #(.BUS_ADDR74("0b0000"))
-//      SB_SPI_INST_LT 
-//       (.SBCLKI(clk),
-//        .SBRWI(1'b0),
-//        .SBSTBI(sb_stb_ix),
-//        .SBADRI7(sb_adr_ix[7]),
-//        .SBADRI6(sb_adr_ix[6]),
-//        .SBADRI5(sb_adr_ix[5]),
-//        .SBADRI4(sb_adr_ix[4]),
-//        .SBADRI3(sb_adr_ix[3]),
-//        .SBADRI2(sb_adr_ix[2]),
-//        .SBADRI1(sb_adr_ix[1]),
-//        .SBADRI0(sb_adr_ix[0]),
-//        .SBDATI7(sb_dat_ix[7]),
-//        .SBDATI6(sb_dat_ix[6]),
-//        .SBDATI5(sb_dat_ix[5]),
-//        .SBDATI4(sb_dat_ix[4]),
-//        .SBDATI3(sb_dat_ix[3]),
-//        .SBDATI2(sb_dat_ix[2]),
-//        .SBDATI1(sb_dat_ix[1]),
-//        .SBDATI0(sb_dat_ix[0]),
-//        .MI(SPI2_MI),
-//        .SI(SPI2_SI),
-//        .SCKI(SPI2_SCKi),
-//        .SCSNI(SPI2_SCSNi),
-//        .SBDATO7(hard00_SBDATo[7]),
-//        .SBDATO6(hard00_SBDATo[6]),
-//        .SBDATO5(hard00_SBDATo[5]),
-//        .SBDATO4(hard00_SBDATo[4]),
-//        .SBDATO3(hard00_SBDATo[3]),
-//        .SBDATO2(hard00_SBDATo[2]),
-//        .SBDATO1(hard00_SBDATo[1]),
-//        .SBDATO0(hard00_SBDATo[0]),
-//        .SBACKO(hard00_SBACKO),
-//        .SPIIRQ(SPIPIRQ[0]),
-//        .SPIWKUP(SPIPWKUP[0]),
-//        .SO(SPI2_SO),
-//        .SOE(SPI2_SOoe),
-//        .MO(SPI2_MO),
-//        .MOE(SPI2_MOoe),
-//        .SCKO(SPI2_SCKo),
-//        .SCKOE(SPI2_SCKoe),
-//        .MCSNO3(SPI2_MCSNo[3]),
-//        .MCSNO2(SPI2_MCSNo[2]),
-//        .MCSNO1(SPI2_MCSNo[1]),
-//        .MCSNO0(SPI2_MCSNo[0]),
-//        .MCSNOE3(SPI2_MCSNoe[3]),
-//        .MCSNOE2(SPI2_MCSNoe[2]),
-//        .MCSNOE1(SPI2_MCSNoe[1]),
-//        .MCSNOE0(SPI2_MCSNoe[0]));
+    SB_SPI #(.BUS_ADDR74("0b0000"))
+      SB_SPI_INST_LT 
+       (.SBCLKI(clk),
+        .SBRWI(1'b0),
+        .SBSTBI(sbus_stb),
+        .SBADRI7(sbus_addr[7]),
+        .SBADRI6(sbus_addr[6]),
+        .SBADRI5(sbus_addr[5]),
+        .SBADRI4(sbus_addr[4]),
+        .SBADRI3(sbus_addr[3]),
+        .SBADRI2(sbus_addr[2]),
+        .SBADRI1(sbus_addr[1]),
+        .SBADRI0(sbus_addr[0]),
+        .SBDATI7(sbus_data_out[7]),
+        .SBDATI6(sbus_data_out[6]),
+        .SBDATI5(sbus_data_out[5]),
+        .SBDATI4(sbus_data_out[4]),
+        .SBDATI3(sbus_data_out[3]),
+        .SBDATI2(sbus_data_out[2]),
+        .SBDATI1(sbus_data_out[1]),
+        .SBDATI0(sbus_data_out[0]),
+        
+        .MI(SPI_MISO),
+
+        .SI(1'b0),
+        .SCKI(1'b0),
+        .SCSNI(1'b0),
+
+        .SBDATO7(sbus_data_in[7]),
+        .SBDATO6(sbus_data_in[6]),
+        .SBDATO5(sbus_data_in[5]),
+        .SBDATO4(sbus_data_in[4]),
+        .SBDATO3(sbus_data_in[3]),
+        .SBDATO2(sbus_data_in[2]),
+        .SBDATO1(sbus_data_in[1]),
+        .SBDATO0(sbus_data_in[0]),
+        .SBACKO(sbus_ack),
+
+        .SPIIRQ(SPIIRQ_not_used),
+        .SPIWKUP(SPIWKUP_not_sued),
+
+        .SO(SO_not_used),
+        .SOE(SOE_not_used),
+        .MO(SPI_MO),
+        .MOE(SPI_MOoe),
+
+        .SCKO(SPI_SCKo),
+        .SCKOE(SPI_SCKoe),
+
+        .MCSNO3(SPI_MCSNo[3]),
+        .MCSNO2(SPI_MCSNo[2]),
+        .MCSNO1(SPI_MCSNo[1]),
+        .MCSNO0(SPI_MCSNo[0]),
+        .MCSNOE3(SPI_MCSNoe[3]),
+        .MCSNOE2(SPI_MCSNoe[2]),
+        .MCSNOE1(SPI_MCSNoe[1]),
+        .MCSNOE0(SPI_MCSNoe[0]));
+
+    assign SPI_MOSI = (SPI_MOoe ? SPI_MO : 1'bz) ; 
+    assign SPI_MCSN[3] = (SPI_MCSNoe[3] ? SPI_MCSNo[3] : 1'bz) ; 
+    assign SPI_MCSN[2] = (SPI_MCSNoe[2] ? SPI_MCSNo[2] : 1'bz) ; 
+    assign SPI_MCSN[1] = (SPI_MCSNoe[1] ? SPI_MCSNo[1] : 1'bz) ; 
+    assign SPI_MCSN[0] = (SPI_MCSNoe[0] ? SPI_MCSNo[0] : 1'bz) ; 
+
+    assign SPI_CS_N = SPI_MCSN[0];
 
     //------------------------------
     // Instantiate RGB primitives
