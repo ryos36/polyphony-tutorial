@@ -94,25 +94,11 @@ class system_bus:
     def worker(self):
         clksleep(10)
 
-        self.debug.wr(1)
-        ack_v = self.ack()
         self.write_data(0x07, 0x18)
-
-        clksleep(10)
-        status:uint8 = self.read_data(0x07)
-        debug_v:uint8 = ( status >> 2 ) & 0x7
-        #         B   G   R
-        #debug_v = 4 | x | ack_v
-        self.debug.wr(debug_v)
-
-        while True:
-            if status == 0xFF:
-                break;
-
         self.write_data(0x0F, 1)
         self.write_data(0x09, 0x80)
         self.write_data(0x0A, 0x80)
-        self.write_data(0x0B, 11)
+        self.write_data(0x0B, 0x3F)
 
         clkfence()
         clksleep(10)
