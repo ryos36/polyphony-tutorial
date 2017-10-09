@@ -57,6 +57,7 @@ class system_bus:
         #self.debug.wr(4)
 
         self.write_data(0x06, 0x18)
+        self.write_data(0x0A, 0xC0)
         self.write_data(0x0D, 0xFF)
 
         while True:
@@ -92,6 +93,8 @@ class system_bus:
                 break
         data1 = self.read_data(0x0E)
         #self.debug.wr(1)
+
+        self.write_data(0x0A, 0x80)
         return (data0 | data1)
 
     def worker(self):
@@ -102,7 +105,7 @@ class system_bus:
         self.sbus_reset.wr(0) 
         self.sbus_ipload(1)
         
-        self.debug.wr(3)
+        self.debug.wr(7)
         self._wait()
         wait_value(1, self.sbus_ipdone)
         self.sbus_ipload(0)
@@ -113,10 +116,10 @@ class system_bus:
         self.write_data(0x07, 0x18)
         self.write_data(0x0F, 2)
         self.write_data(0x09, 0x80)
-        self.write_data(0x0A, 0x80)
-        self.write_data(0x0B, 0x02)
+        self.write_data(0x0A, 0xC0)
+        self.write_data(0x0B, 0x32)
 
-        #self.write_data(0x0A, 0xC0)
+        self.write_data(0x0A, 0xC0)
         self.write_data(0x0D, 0x35)
         self.debug.wr(4)
 
@@ -129,7 +132,59 @@ class system_bus:
                 self.write_data(0x06, 0x10)
                 break
 
-        self.debug.wr((irq_status >> 3) & 2)
+        #self.debug.wr((irq_status >> 3) & 3)
+
+        while True:
+            irq_status = self.read_data(0x06)
+            irq_rrdy = (irq_status >> 3) & 1
+            if irq_rrdy == 1 :
+                self.write_data(0x06, irq_status)
+                break
+
+        self.debug.wr((irq_status >> 3) & 3)
+        #self.debug.wr(1)
+        
+        while True:
+            irq_status = self.read_data(0x06)
+            irq_trdy = (irq_status >> 4) & 1
+            if irq_trdy == 1 :
+                self.write_data(0x06, 0x10)
+                break
+            irq_rrdy = (irq_status >> 3) & 1
+            if irq_rrdy == 1 :
+                self.write_data(0x06, 0x08)
+                break
+
+        self.debug.wr(1)
+        #self._wait()
+
+        #while True:
+        #    irq_status = self.read_data(0x06)
+        #    if irq_status == 0 :
+        #        break
+        #    self._wait()
+        #    self.write_data(0x06, irq_status)
+        #    self._wait()
+
+        #self.debug.wr((irq_status >> 3) & 2)
+        #self._wait()
+        self.write_data(0x0A, 0x80)
+
+        #----------------------------------------------------
+        self.write_data(0x0A, 0xC0)
+        self.write_data(0x0D, 0x12)
+        self.debug.wr(7)
+
+        irq_status = 0
+        while True:
+            irq_status = self.read_data(0x06)
+            irq_trdy = (irq_status >> 4) & 1
+            if irq_trdy == 1 :
+                self.write_data(0x0D, 0x34)
+                self.write_data(0x06, 0x10)
+                break
+
+        #self.debug.wr((irq_status >> 3) & 2)
 
         while True:
             irq_status = self.read_data(0x06)
@@ -138,7 +193,7 @@ class system_bus:
                 self.write_data(0x06, 0x08)
                 break
 
-        self.debug.wr((irq_status >> 3) & 2)
+        #self.debug.wr((irq_status >> 3) & 2)
         
         while True:
             irq_status = self.read_data(0x06)
@@ -147,14 +202,16 @@ class system_bus:
                 self.write_data(0x06, 0x08)
                 break
 
-        #self.write_data(0x0A, 0x80)
+        self.write_data(0x0A, 0x80)
 
         clkfence()
         clksleep(10)
 
+        #self.debug.wr(4)
         while polyphony.is_worker_running():
             data16 = self.read_spi_data16()
             print(data16)
+            self._wait()
 
         #while is_worker_running():
         #    debug_v = 7 ^ debug_v
