@@ -105,7 +105,7 @@ class system_bus:
         self.sbus_reset.wr(0) 
         self.sbus_ipload(1)
         
-        self.debug.wr(7)
+        self.debug.wr(4)
         self._wait()
         wait_value(1, self.sbus_ipdone)
         self.sbus_ipload(0)
@@ -117,7 +117,7 @@ class system_bus:
         self.write_data(0x0F, 2)
         self.write_data(0x09, 0x80)
         self.write_data(0x0A, 0xC0)
-        self.write_data(0x0B, 0x32)
+        self.write_data(0x0B, 0x02)
 
         self.write_data(0x0A, 0xC0)
         self.write_data(0x0D, 0x35)
@@ -128,7 +128,6 @@ class system_bus:
             irq_status = self.read_data(0x06)
             irq_trdy = (irq_status >> 4) & 1
             if irq_trdy == 1 :
-                self.write_data(0x0D, 0x5A)
                 self.write_data(0x06, 0x10)
                 break
 
@@ -141,21 +140,22 @@ class system_bus:
                 self.write_data(0x06, irq_status)
                 break
 
-        self.debug.wr((irq_status >> 3) & 3)
-        #self.debug.wr(1)
-        
-        while True:
-            irq_status = self.read_data(0x06)
-            irq_trdy = (irq_status >> 4) & 1
-            if irq_trdy == 1 :
-                self.write_data(0x06, 0x10)
-                break
-            irq_rrdy = (irq_status >> 3) & 1
-            if irq_rrdy == 1 :
-                self.write_data(0x06, 0x08)
-                break
-
-        self.debug.wr(1)
+#        self.write_data(0x0D, 0x5A)
+#        self.debug.wr((irq_status >> 3) & 3)
+#        #self.debug.wr(1)
+#        
+#        while True:
+#            irq_status = self.read_data(0x06)
+#            irq_trdy = (irq_status >> 4) & 1
+#            if irq_trdy == 1 :
+#                self.write_data(0x06, 0x10)
+#                #break
+#            irq_rrdy = (irq_status >> 3) & 1
+#            if irq_rrdy == 1 :
+#                self.write_data(0x06, 0x08)
+#                break
+#
+#        self.debug.wr(1)
         #self._wait()
 
         #while True:
@@ -180,7 +180,7 @@ class system_bus:
             irq_status = self.read_data(0x06)
             irq_trdy = (irq_status >> 4) & 1
             if irq_trdy == 1 :
-                self.write_data(0x0D, 0x34)
+                self.write_data(0x0D, 0xAA)
                 self.write_data(0x06, 0x10)
                 break
 
