@@ -194,7 +194,10 @@ module spi_top (
     //assign SPI_MCSN[1] = (SPI_MCSNoe[1] ? SPI_MCSNo[1] : 1'bz) ; 
     //assign SPI_MCSN[0] = (SPI_MCSNoe[0] ? SPI_MCSNo[0] : 1'bz) ; 
 
-    assign SPI_CS_N = SPI_MCSN[0] | SPI_MCSN[1] | SPI_MCSN[2] | SPI_MCSN[3];
+    //assign SPI_CS_N = SPI_MCSN[0] | SPI_MCSN[1] | SPI_MCSN[2] | SPI_MCSN[3];
+    //assign SPI_CS_N = SPI_MCSN[0] & SPI_MCSN[1] & SPI_MCSN[2] & SPI_MCSN[3];
+    assign SPI_CS_N = SPI_MCSN[2];
+    //assign SPI_CS_N = SPI_MCSN[1] & SPI_MCSN[0] ;
     //assign SPI_CS_N = 1'b0;
 
     //------------------------------

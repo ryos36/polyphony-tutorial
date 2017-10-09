@@ -111,23 +111,43 @@ class system_bus:
         clksleep(8)
 
         self.write_data(0x07, 0x18)
-        self.write_data(0x0F, 1)
+        self.write_data(0x0F, 2)
         self.write_data(0x09, 0x80)
         self.write_data(0x0A, 0x80)
-        self.write_data(0x0B, 0x01)
+        self.write_data(0x0B, 0x02)
 
-        self.write_data(0x0A, 0xC0)
-        self.write_data(0x0D, 0x55)
+        #self.write_data(0x0A, 0xC0)
+        self.write_data(0x0D, 0x35)
         self.debug.wr(4)
 
+        irq_status = 0
         while True:
-            data = self.read_data(0x06)
-            self.debug_out(data)
-            if data != 0 :
+            irq_status = self.read_data(0x06)
+            irq_trdy = (irq_status >> 4) & 1
+            if irq_trdy == 1 :
+                self.write_data(0x0D, 0x5A)
+                self.write_data(0x06, 0x10)
                 break
-        self.debug.wr(2)
 
-        self.write_data(0x0A, 0x80)
+        self.debug.wr((irq_status >> 3) & 2)
+
+        while True:
+            irq_status = self.read_data(0x06)
+            irq_rrdy = (irq_status >> 3) & 1
+            if irq_rrdy == 1 :
+                self.write_data(0x06, 0x08)
+                break
+
+        self.debug.wr((irq_status >> 3) & 2)
+        
+        while True:
+            irq_status = self.read_data(0x06)
+            irq_rrdy = (irq_status >> 3) & 1
+            if irq_rrdy == 1 :
+                self.write_data(0x06, 0x08)
+                break
+
+        #self.write_data(0x0A, 0x80)
 
         clkfence()
         clksleep(10)

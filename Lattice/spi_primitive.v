@@ -187,7 +187,7 @@ module spi_primitive (
     assign init_addr[21] = 8'b11111111 ; 
     assign init_addr[22] = 8'b11111111 ; 
     assign init_value[0] = 8'b0 ; 
-    assign init_value[1] = 1 ; 
+    assign init_value[1] = 2 ; 
     assign init_value[2] = 8'b10000000 ; 
     assign init_value[3] = 8'b10000000 ; 
     assign init_value[4] = 27 ; 
