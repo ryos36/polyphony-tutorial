@@ -1,7 +1,7 @@
 import polyphony
 from polyphony import testbench, module, is_worker_running
-from polyphony.io import Port
-from polyphony.typing import bit, uint8, uint3
+from polyphony.io import Port, Queue
+from polyphony.typing import bit, uint8, uint3, uint4
 from polyphony.timing import clksleep, clkfence, wait_rising, wait_falling, wait_value
 
 CONVST_PULSE_CYCLE = 10
@@ -17,11 +17,14 @@ class system_bus:
         self.data_in = Port(uint8, 'in')
         self.ack = Port(bit, 'in')
 
+        self.sbus_reset = Port(bit, 'out', init=0)
+        self.sbus_ipload = Port(bit, 'out', init=0)
+        self.sbus_ipdone = Port(bit, 'in')
+
         self.led = Port(bit, 'out')
         self.debug = Port(uint3, 'out')
 
         self.append_worker(self.worker)
-        #self.append_worker(self.main)
 
     def write_data(self, addr:uint8, data:uint8):
         self.rw(1)
@@ -51,7 +54,7 @@ class system_bus:
         debug_v:uint3 = 0
 
         debug_v = 4
-        self.debug.wr(4)
+        #self.debug.wr(4)
 
         self.write_data(0x06, 0x18)
         self.write_data(0x0D, 0xFF)
@@ -63,7 +66,7 @@ class system_bus:
                 self.write_data(0x06, 0x10)
                 break
         self.write_data(0x0D, 0xFF)
-        self.debug.wr(5)
+        #self.debug.wr(5)
 
         debug_v = 1
 
@@ -71,34 +74,60 @@ class system_bus:
             irq_status = self.read_data(0x06)
             irq_rrdy = (irq_status >> 3) & 1
             debug_v = 7 ^ debug_v
-            self.debug.wr(debug_v)
+        #    self.debug.wr(debug_v)
             if irq_rrdy == 1:
                 self.write_data(0x06, 0x08)
                 break
         data0 = self.read_data(0x0E) << 8
         debug_v = 2
-        self.debug.wr(2)
+        #self.debug.wr(2)
 
         while True:
             irq_status = self.read_data(0x06)
             irq_rrdy = (irq_status >> 3) & 1
             if irq_rrdy == 1:
                 debug_v = 4 ^ debug_v
-                self.debug.wr(debug_v)
+                #self.debug.wr(debug_v)
                 self.write_data(0x06, 0x08)
                 break
         data1 = self.read_data(0x0E)
-        self.debug.wr(1)
+        #self.debug.wr(1)
         return (data0 | data1)
 
     def worker(self):
-        clksleep(10)
+
+        self.sbus_reset.wr(1) 
+        clksleep(8)
+
+        self.sbus_reset.wr(0) 
+        self.sbus_ipload(1)
+        
+        self.debug.wr(3)
+        self._wait()
+        wait_value(1, self.sbus_ipdone)
+        self.sbus_ipload(0)
+        self.debug.wr(0)
+
+        clksleep(8)
 
         self.write_data(0x07, 0x18)
-        self.write_data(0x0F, 1)
-        self.write_data(0x09, 0x80)
+        #self.write_data(0x0F, 1)
+        #self.write_data(0x09, 0x80)
+        #self.write_data(0x0A, 0x80)
+        self.write_data(0x0B, 0x01)
+
+        self.write_data(0x0A, 0xC0)
+        self.write_data(0x0D, 0x55)
+        self.debug.wr(4)
+
+        while True:
+            data = self.read_data(0x06)
+            self.debug_out(data)
+            if data != 0 :
+                break
+        self.debug.wr(2)
+
         self.write_data(0x0A, 0x80)
-        self.write_data(0x0B, 0x3F)
 
         clkfence()
         clksleep(10)
@@ -115,19 +144,42 @@ class system_bus:
         #    self._wait()
 
     def _wait(self):
-        INTERVAL=2000000
-        for i in range(INTERVAL // 2):
+        INTERVAL=20000000
+        for i in range(INTERVAL):
             pass
 
-    def main(self):
-        led:bit = 1
-        debug_v:uint3 = 7
-        while is_worker_running():
-            self.led(led)
-            led = ~led
-            debug_v = 7 ^ debug_v
-            self.debug.wr(debug_v)
+    def debug_out(self, debug_v:uint8):
+        self.debug.wr(3)
+        self._wait()
+
+        for i in range(4):
+            debug_v0 = (debug_v >> ((3 - i) * 2)) & 0x3 
+            if ((i & 1) == 0) :
+                debug_v0 |= 4
+            self.debug.wr(debug_v0)
             self._wait()
+
+        self.debug.wr(7)
+        self._wait()
+        self.debug.wr(0)
+        self._wait()
+
+    def rgb_out(self, n, v0:uint3, v1:uint3):
+        self.debug.wr(v0)
+        self._wait()
+        self.debug.wr(v1)
+        self._wait()
+
+    def debug_out0(self, debug_v:uint8):
+        self.rgb_out(20, 7, 0)
+        for i in range(4):
+            debug_v0 = (debug_v >> i) & 0x3
+            debug_v1 = debug_v0
+            if ((i & 1) == 0):
+                debug_v1 |= 4
+            self.rgb_out(10, debug_v0, debug_v1)
+        self.rgb_out(30, 7, 5)
+        self.debug.wr(0)
         
 @polyphony.testbench
 def test(sbus):
