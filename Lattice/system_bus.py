@@ -111,9 +111,9 @@ class system_bus:
         clksleep(8)
 
         self.write_data(0x07, 0x18)
-        #self.write_data(0x0F, 1)
-        #self.write_data(0x09, 0x80)
-        #self.write_data(0x0A, 0x80)
+        self.write_data(0x0F, 1)
+        self.write_data(0x09, 0x80)
+        self.write_data(0x0A, 0x80)
         self.write_data(0x0B, 0x01)
 
         self.write_data(0x0A, 0xC0)
