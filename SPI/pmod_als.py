@@ -1,7 +1,7 @@
 import polyphony
 from polyphony.io import Port
 from polyphony.typing import bit, uint3, uint12, uint16
-from polyphony.timing import clksleep, clkfence, wait_rising, wait_falling
+from polyphony.timing import clksleep, clkfence, wait_falling, wait_value
 
 
 CONVST_PULSE_CYCLE = 10
@@ -52,10 +52,20 @@ class pmod_als:
 
 @polyphony.testbench
 def test(spic):
+    f = 0
+    for i in range(12):
+        wait_falling(spic.sclk)
+        spic.miso.wr(f)
+        f = 1 - f
+        clkfence()
+
+    clksleep(2)
+    spic.miso.wr(0)
     data = spic.data16.rd()
     print("data0:" , data)
-    data = spic.data16.rd()
-    print("data1:" , data)
+
+    #data = spic.data16.rd()
+    #print("data1:" , data)
 
 if __name__ == '__main__':
     spic = pmod_als()
