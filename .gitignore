@@ -1,2 +1,9 @@
+*.exe
+*.o
+*.cf
+*.vcd
 .tmp
 __pycache__
+Life/makefile
+Life0/makefile
+Xorshift/makefile
