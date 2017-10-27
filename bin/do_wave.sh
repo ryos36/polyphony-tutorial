@@ -15,7 +15,8 @@ WORK_DIR=.tmp
 TEST_V=test.v
 VCD_TEST_V=vcd_${TEST_V}
 
-${BIN_FILE_DIR}/compile.py ${MODULE_NAME}.py
+#${BIN_FILE_DIR}/compile.py ${MODULE_NAME}.py
+./c.py ${MODULE_NAME}.py
 
 export INSTANCE_NAME=`awk -f ${BIN_FILE_DIR}/get_module.awk ${WORK_DIR}/${TEST_V}`
 awk -f ${BIN_FILE_DIR}/add_vcd.awk ${WORK_DIR}/${TEST_V} > ${WORK_DIR}/${VCD_TEST_V}

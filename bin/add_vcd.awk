@@ -1,5 +1,5 @@
 { print }
-/.*monitor/ { 
+/initial begin/ && (already_add == 0) {
     vcd_file = ENVIRON["VCD_FILE"]
     if ( vcd_file == "" ) vcd_file = "wave.vcd"
     print "$dumpfile(\"" vcd_file "\");"
