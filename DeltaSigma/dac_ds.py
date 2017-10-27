@@ -4,7 +4,7 @@ from polyphony import module, pure
 from polyphony import testbench
 from polyphony.io import Port
 from polyphony.typing import bit, int8
-from polyphony.timing import clksleep, clkfence, wait_rising, wait_falling
+from polyphony.timing import clksleep, clkfence, wait_rising, wait_falling, wait_value
 
 MAX_VALUE = 127
 SIN_CYCLE = 798
@@ -27,13 +27,12 @@ table = [0] * SIN_CYCLE
 @polyphony.module
 class dac_ds:
     def __init__(self, use_sin_table = False):
-        self.i_port  = Port(int8, 'in', protocol='none')
-        self.i_detect  = Port(bit, 'in', protocol='none')
-        self.o_data  = Port(bit, 'out', protocol='none')
-        self.append_worker(self.dac_ds_worker, use_sin_table, self.i_port, self.i_detect, self.o_data)
+        self.i_port  = Port(int8, 'in', protocol='valid')
+        self.o_port  = Port(int8, 'out', protocol='ready_valid')
+        self.append_worker(self.dac_ds_worker, use_sin_table, self.i_port, self.o_port)
         print("__init__")
 
-    def dac_ds_worker(self, use_sin_table, i_port, i_detect, o_data):
+    def dac_ds_worker(self, use_sin_table, i_port, o_port):
         i = 0
         ti = 0
         while polyphony.is_worker_running():
@@ -44,20 +43,22 @@ class dac_ds:
                 else:
                     ti = ti + 1
             else:
-                enable = self.i_detect.rd()
-                while ( enable == 0 ) :
-                    enable = self.i_detect.rd()
+                #wait_value(1, self.i_detect)
                 v = self.i_port.rd()
+                self.o_port(v)
             #print("v:", v)
                 
 m = dac_ds(use_sin_table = False)
 
 @testbench
 def test(m):
-    print("test")
+    m.i_port.wr(99)
     for i in range(10):
-        v = m.o_data.rd()
+        m.i_port.wr(i)
+        if i == 8:
+            #clksleep(2)
+            clkfence()
+        v = m.o_port.rd()
         print(v)
-        clksleep(1)
 
 test(m)

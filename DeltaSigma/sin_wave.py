@@ -6,7 +6,6 @@ from polyphony.io import Port
 from polyphony.typing import bit, int8
 from polyphony.timing import clksleep, clkfence, wait_rising, wait_falling
 
-CONVST_PULSE_CYCLE = 10
 MAX_VALUE = 127
 SIN_CYCLE = 798
 
@@ -51,9 +50,10 @@ m = sin_wave()
 
 @testbench
 def test(m):
-    for i in range(100):
-        print(m.o_port.rd(), ":", m.o_pulse.rd())
-        clksleep(1)
-    print(m.o_port.rd())
+    for i in range(SIN_CYCLE * 4):
+        b:bit = m.o_pulse.rd()
+        v:int8 = m.o_port.rd()
+        if ( b ) :
+            print(v)
 
 test(m)
