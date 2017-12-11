@@ -66,12 +66,14 @@ def _sha256(msg, _h, w):
 
     _lst = [a, b, c, d, e, f, g, h]
 
-    for i in range(8):
-        _h[i] = (_h[i] + _lst[i]) & 0xFFFFFFFF
+    with rule(unroll='full'):
+        for i in range(8):
+            _h[i] = (_h[i] + _lst[i]) & 0xFFFFFFFF
 
 def sha256(msg, h):
-    for i in range(len(_h)):
-        h[i] = _h[i]
+    with rule(unroll='full'):
+        for i in range(len(_h)):
+            h[i] = _h[i]
     work = [None] * 64
     _sha256(msg, h, work)
 
@@ -87,6 +89,6 @@ def test():
     sha256(msg_lst, h)
     for i in h:
         print(i)
-        print('R   {:08x}'.format(i))
+        #print('R   {:08x}'.format(i))
 
 test()
