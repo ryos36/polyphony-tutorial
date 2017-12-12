@@ -24,7 +24,7 @@ k = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
 h = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
      0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]
 
-def uint32x8_bit512(lst):
+def bit32x8_bit512(lst:List[bit32]):
     rv512:bit512
     rv512 = 0
     for i in range(8):
@@ -32,7 +32,7 @@ def uint32x8_bit512(lst):
         rv512 |= lst[i]
     return rv512
 
-def uint32x16_bit512(lst):
+def bit32x16_bit512(lst:List[bit32]):
     rv512:bit512
     rv512 = 0
     for i in range(16):
@@ -48,8 +48,6 @@ class sha256:
     def __init__(self):
         self.data_in = Queue(bit512, 'in')
         self.data_out = Queue(bit512, 'out')
-        self.do_digest  = Port(bit, 'in', protocol='none')
-        self.do_digest_ack  = Port(bit, 'out', protocol='none')
         self.append_worker(self.process_sha256)
 
     def process_sha256(self):
@@ -63,7 +61,15 @@ class sha256:
             for i in range(8):
                 _h[i] = h[i]
 
-            while update:
+            block_len512:bit512 = self.data_in.rd()
+            block_len32 = block_len512
+            count = 0
+            print(block_len512)
+            print(block_len32)
+
+            while count < block_len32:
+                print(count, block_len32)
+                count += 1
                 print("--=========")
                 d512 = self.data_in.rd()
                 shift_n = 480
@@ -103,57 +109,23 @@ class sha256:
                 for i in range(8):
                     _h[i] = (_h[i] + __h[i]) & 0xFFFFFFFF
 
-                #for i in _h:
-                #   print('{:08x}'.format(i)) 
-                print("===========")
-                clksleep(1)
-                check_done = self.do_digest.rd()
-                if self.data_in.empty():
-                    print("empty")
-                    if check_done == 1 :
-                        update = False
-                        self.do_digest_ack.wr(1)
-                        print("ack", 1)
-
-            print("rite")
-            #self.data_out.wr(uint32x8_bit512(_h))
-
-            while True:
-                check_done = self.do_digest.rd()
-
-            while True:
-                check_done = self.do_digest.rd()
-                if check_done == 0:
-                    break
-                self.do_digest_ack.wr(0)
+            self.data_out.wr(bit32x8_bit512(_h))
 
 @testbench
 def test(m):
     lst = [0x61616161] * 16
-    v512_0 = uint32x16_bit512(lst)
+    v512_0 = bit32x16_bit512(lst)
     #print('R   {:0128x}'.format(v512_0))
     lst = [0] * 16
     lst[0] = 0x80000000
     lst[15] = 0x00000200
-    v512_1 = uint32x16_bit512(lst)
+    v512_1 = bit32x16_bit512(lst)
     #print('R   {:0128x}'.format(v512_1))
 
+    m.data_in.wr(2)
     m.data_in.wr(v512_0)
     m.data_in.wr(v512_1)
-    m.do_digest.wr(1)
-    clksleep(1)
 
-    print("hhh")
-    while True:
-        v = m.do_digest_ack.rd()
-        print("ack", v)
-        if v == 1:
-            break
-        clksleep(1000)
-
-    print("h2h")
-    m.do_digest.wr(0)
-    print("h3h")
     v512 = m.data_out.rd()
     print(v512)
     #print('R   {:08x}'.format(v512))
