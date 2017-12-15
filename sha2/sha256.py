@@ -31,15 +31,25 @@ def bit32x8_bit256(lst:List[bit32])->bit256:
         rv256 |= lst[i]
     return rv256
 
-def bit32x16_bit512(lst:List[bit32], start_i = 0)->bit512:
+def bit32x16_bit512(lst:List[bit32])->bit512:
     rv512:bit512 = 0
-    #print('start_i', start_i)
     for i in range(16):
         rv512 <<= 32
-        rv512 |= lst[start_i]
-        start_i += 1
+        rv512 |= lst[i]
+    #print('bit32->bit512', rv512, lst[15])
     #print('end start_i', start_i)
     return rv512
+
+#def old_bit32x16_bit512(lst:List[bit32], start_i = 0)->bit512:
+#    rv512:bit512 = 0
+#    #print('start_i', start_i)
+#    for i in range(16):
+#        rv512 <<= 32
+#        rv512 |= lst[start_i]
+#        start_i += 1
+#    print('bit32->bit512', rv512, lst[15])
+#    print('end start_i', start_i)
+#    return rv512
 
 def rotr(x, y):
     return ((x >> y) | (x << (32 - y))) & 0xFFFFFFFF
@@ -73,6 +83,7 @@ class sha256:
                 count += 1
                 #print("--=========")
                 d512 = self.data_in.rd()
+                print("d512", d512)
                 shift_n = 480
 
                 with rule(unroll='full'):
@@ -121,39 +132,36 @@ class sha256:
 
 @testbench
 def test(m):
-    lst = [0x61616161] * 16
-    blen = len(lst)
+    msg = [0x61616161] * 16 # type: List[bit32]
+    lst = [0] * 16 # type: List[bit32]
+    blen = len(msg)
     blocks = ((blen * 4 + 5) + 63) // 64
     print("blocks", blocks)
 
     start_i = 0
     m.data_in.wr(blocks)
-    for i in range(blocks - 1):
-        rv512:bit512 = 0
-        #print('start_i', start_i)
-        start_j = start_i
-        for j in range(16):
-            for k in range(32):
-                mulv:bit512 = 2
-                rv512 = rv512 * mulv
-                #print(rv512)
-            rv512 |= lst[start_j]
-            start_j += 1
-        #v512:bit512 = bit32x16_bit512(lst, start_i)
-        #print('v512', rv512)
-        m.data_in.wr(rv512)
-        start_i += 16
 
-    #send last block
-    last_block = [0] * 16
+    for i in range(blocks - 1):
+        print('index:', i)
+        #print('start_i', start_i)
+        for j in range(16):
+            lst[j] = msg[start_i]
+            start_i += 1
+        rv512:bit512 = bit32x16_bit512(lst)
+        print('rv512', rv512)
+        m.data_in.wr(rv512)
+
+    for i in range(16):
+        lst[i] = 0
+
     for i in range(blen - start_i):
-        last_block[i] = lst[start_i]
+        lst[i] = lst[start_i]
         start_i += 1
         
-    last_block[blen - start_i] = 0x80000000
-    last_block[15] = (blocks << 8)
+    lst[blen - start_i] = 0x80000000
+    lst[15] = (blocks << 8)
 
-    v512_last = bit32x16_bit512(last_block)
+    v512_last:bit512 = bit32x16_bit512(lst)
     print('lastblock', v512_last)
     m.data_in.wr(v512_last)
 
