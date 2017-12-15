@@ -1,8 +1,8 @@
 from polyphony import testbench, module, is_worker_running
-from polyphony.typing import bit, bit512, bit32, uint3, uint4, List
+from polyphony.typing import bit, bit512, bit256, bit32, uint3, uint4, List
 from polyphony.io import Port, Queue
 from polyphony.timing import clksleep, clkfence, wait_rising, wait_falling
-
+from polyphony import rule
 
 k = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
      0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -24,20 +24,21 @@ k = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
 h = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
      0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]
 
-def bit32x8_bit512(lst:List[bit32]):
-    rv512:bit512
-    rv512 = 0
+def bit32x8_bit256(lst:List[bit32])->bit256:
+    rv256:bit256 = 0
     for i in range(8):
-        rv512 <<= 32
-        rv512 |= lst[i]
-    return rv512
+        rv256 <<= 32
+        rv256 |= lst[i]
+    return rv256
 
-def bit32x16_bit512(lst:List[bit32]):
-    rv512:bit512
-    rv512 = 0
+def bit32x16_bit512(lst:List[bit32], start_i = 0)->bit512:
+    rv512:bit512 = 0
+    #print('start_i', start_i)
     for i in range(16):
         rv512 <<= 32
-        rv512 |= lst[i]
+        rv512 |= lst[start_i]
+        start_i += 1
+    #print('end start_i', start_i)
     return rv512
 
 def rotr(x, y):
@@ -47,7 +48,7 @@ def rotr(x, y):
 class sha256:
     def __init__(self):
         self.data_in = Queue(bit512, 'in')
-        self.data_out = Queue(bit512, 'out')
+        self.data_out = Queue(bit256, 'out')
         self.append_worker(self.process_sha256)
 
     def process_sha256(self):
@@ -64,18 +65,20 @@ class sha256:
             block_len512:bit512 = self.data_in.rd()
             block_len32 = block_len512
             count = 0
-            print(block_len512)
-            print(block_len32)
+            #print(block_len512)
+            #print(block_len32)
 
             while count < block_len32:
-                print(count, block_len32)
+                #print(count, block_len32)
                 count += 1
-                print("--=========")
+                #print("--=========")
                 d512 = self.data_in.rd()
                 shift_n = 480
-                for i in range(16):
-                    work[i] = (d512 >> shift_n) & 0xFFFFFFFF
-                    shift_n -= 32
+
+                with rule(unroll='full'):
+                    for i in range(16):
+                        work[i] = (d512 >> shift_n) & 0xFFFFFFFF
+                        shift_n -= 32
 
                 for i in range(16, 64):
                     wi_15 = work[i - 15]
@@ -106,29 +109,57 @@ class sha256:
                     __h[1] = __h[0]
                     __h[0] = (t1 + t2) & 0xFFFFFFFF
 
-                for i in range(8):
-                    _h[i] = (_h[i] + __h[i]) & 0xFFFFFFFF
+                with rule(unroll='full'):
+                    for i in range(8):
+                        _h[i] = (_h[i] + __h[i]) & 0xFFFFFFFF
 
-            self.data_out.wr(bit32x8_bit512(_h))
+            rv256:bit256 = 0
+            for i in range(8):
+                rv256 <<= 32
+                rv256 |= _h[i]
+            self.data_out.wr(rv256)
 
 @testbench
 def test(m):
     lst = [0x61616161] * 16
-    v512_0 = bit32x16_bit512(lst)
-    #print('R   {:0128x}'.format(v512_0))
-    lst = [0] * 16
-    lst[0] = 0x80000000
-    lst[15] = 0x00000200
-    v512_1 = bit32x16_bit512(lst)
-    #print('R   {:0128x}'.format(v512_1))
+    blen = len(lst)
+    blocks = ((blen * 4 + 5) + 63) // 64
+    print("blocks", blocks)
 
-    m.data_in.wr(2)
-    m.data_in.wr(v512_0)
-    m.data_in.wr(v512_1)
+    start_i = 0
+    m.data_in.wr(blocks)
+    for i in range(blocks - 1):
+        rv512:bit512 = 0
+        #print('start_i', start_i)
+        start_j = start_i
+        for j in range(16):
+            for k in range(32):
+                mulv:bit512 = 2
+                rv512 = rv512 * mulv
+                #print(rv512)
+            rv512 |= lst[start_j]
+            start_j += 1
+        #v512:bit512 = bit32x16_bit512(lst, start_i)
+        #print('v512', rv512)
+        m.data_in.wr(rv512)
+        start_i += 16
 
-    v512 = m.data_out.rd()
-    print(v512)
-    #print('R   {:08x}'.format(v512))
+    #send last block
+    last_block = [0] * 16
+    for i in range(blen - start_i):
+        last_block[i] = lst[start_i]
+        start_i += 1
+        
+    last_block[blen - start_i] = 0x80000000
+    last_block[15] = (blocks << 8)
+
+    v512_last = bit32x16_bit512(last_block)
+    print('lastblock', v512_last)
+    m.data_in.wr(v512_last)
+
+    v256:bit256 = m.data_out.rd()
+    print('sha256', v256)
+    #print('R   {:032x}'.format(v256))
 
 m=sha256()
 test(m)

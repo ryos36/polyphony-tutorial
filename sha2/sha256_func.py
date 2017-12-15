@@ -25,9 +25,8 @@ def rotr(x, y):
     return ((x >> y) | (x << (32 - y))) & 0xFFFFFFFF
 
 def _sha256(msg, _h, w):
-    with rule(unroll='full'):
-        for i in range(16):
-            w[i] = msg[i]
+    for i in range(16):
+        w[i] = msg[i]
 
     for i in range(16, 64):
         wi_15 = w[i - 15]
@@ -87,6 +86,6 @@ def test():
     sha256(msg_lst, h)
     for i in h:
         print(i)
-        print('R   {:08x}'.format(i))
+#        print('R   {:08x}'.format(i))
 
 test()

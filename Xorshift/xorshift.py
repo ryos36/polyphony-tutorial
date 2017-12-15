@@ -2,7 +2,7 @@ import polyphony
 from polyphony import module, pure
 from polyphony import testbench
 from polyphony.io import Port
-from polyphony.typing import bit, uint32
+from polyphony.typing import bit, bit32
 from polyphony.timing import clksleep, clkfence, wait_rising, wait_falling
 
 @module
@@ -13,7 +13,7 @@ class xorshift:
         self.append_worker(self.xorshift_worker, seed, self.i_start, self.o_data)
 
     def xorshift_worker(self, seed, i_start, o_data):
-        y:uint32 = seed
+        y:bit32 = seed
         while polyphony.is_worker_running():
             while ( 1 ):
                 flag = i_start.rd()
@@ -46,8 +46,9 @@ def test(m):
         clkfence()
         for i in range(32):
             #b[i] = m.o_data.rd()
-            bb = m.o_data.rd()
-            rv = rv + (bb << shift_n)
+            bb:bit32 = m.o_data.rd()
+            rv += (bb << shift_n)
+            print(bb, rv)
             shift_n = shift_n + 1
         print("xor shift:", rv)
         clksleep(100)
