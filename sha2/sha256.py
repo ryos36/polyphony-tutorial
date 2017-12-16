@@ -3,6 +3,7 @@ from polyphony.typing import bit, bit512, bit256, bit32, uint3, uint4, List
 from polyphony.io import Port, Queue
 from polyphony.timing import clksleep, clkfence, wait_rising, wait_falling
 from polyphony import rule
+from polyphony import unroll, pipelined
 
 k = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
      0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -52,7 +53,8 @@ def bit32x16_bit512(lst:List[bit32])->bit512:
 #    return rv512
 
 def rotr(x, y):
-    return ((x >> y) | (x << (32 - y))) & 0xFFFFFFFF
+    #return ((x >> y) | (x << (32 - y))) & 0xFFFFFFFF
+    return ((x >> y) | (x << (32 - y)))
 
 @module
 class sha256:
@@ -83,13 +85,12 @@ class sha256:
                 count += 1
                 #print("--=========")
                 d512 = self.data_in.rd()
-                print("d512", d512)
+                #print("start d512 %5t", d512, "$time")
                 shift_n = 480
 
-                with rule(unroll='full'):
-                    for i in range(16):
-                        work[i] = (d512 >> shift_n) & 0xFFFFFFFF
-                        shift_n -= 32
+                for i in unroll(range(16)):
+                    work[i] = (d512 >> shift_n) & 0xFFFFFFFF
+                    shift_n -= 32
 
                 for i in range(16, 64):
                     wi_15 = work[i - 15]
@@ -100,8 +101,9 @@ class sha256:
                     wi_7 = work[i - 7]
                     work[i] = (wi_16 + s0 + wi_7 + s1) & 0xFFFFFFFF
 
-                for i in range(8):
-                    __h[i] = _h[i]
+                with rule(unroll='full'):
+                    for i in range(8):
+                        __h[i] = _h[i]
 
                 for i in range(64):
                     s0 = rotr(__h[0], 2) ^ rotr(__h[0], 13) ^ rotr(__h[0], 22)
@@ -124,10 +126,14 @@ class sha256:
                     for i in range(8):
                         _h[i] = (_h[i] + __h[i]) & 0xFFFFFFFF
 
+            #    print("turn %5t", count, "$time")
+
             rv256:bit256 = 0
-            for i in range(8):
-                rv256 <<= 32
-                rv256 |= _h[i]
+            with rule(unroll='full'):
+                for i in range(8):
+                    rv256 <<= 32
+                    rv256 |= _h[i]
+            #print("rv256 %5t", rv256, "$time")
             self.data_out.wr(rv256)
 
 @testbench
@@ -144,15 +150,19 @@ def test(m):
     for i in range(blocks - 1):
         print('index:', i)
         #print('start_i', start_i)
-        for j in range(16):
-            lst[j] = msg[start_i]
-            start_i += 1
+        with rule(unroll='full'):
+            for j in range(16):
+                lst[j] = msg[start_i]
+                start_i += 1
         rv512:bit512 = bit32x16_bit512(lst)
         print('rv512', rv512)
         m.data_in.wr(rv512)
 
-    for i in range(16):
-        lst[i] = 0
+    print("$time")
+
+    with rule(unroll='full'):
+        for i in range(16):
+            lst[i] = 0
 
     for i in range(blen - start_i):
         lst[i] = lst[start_i]
