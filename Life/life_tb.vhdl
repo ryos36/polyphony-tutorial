@@ -26,9 +26,9 @@ component life
 end component;
 
     signal clk : std_logic;
-    signal data0 : std_logic_vector(31 downto 0) := "10000000001010101101110110101011";
-    signal data1 : std_logic_vector(31 downto 0) := "01111111111010101101110110001011";
-    signal data2 : std_logic_vector(31 downto 0) := "11000000001010101101110110101011";
+    signal data0 : std_logic_vector(31 downto 0) := "01111100001010101101110110101010";
+    signal data1 : std_logic_vector(31 downto 0) := "11000001111010101101110110001000";
+    signal data2 : std_logic_vector(31 downto 0) := "11100000001010101101110110101111";
 
     signal din : std_logic_vector(2 downto 0);
     signal result : std_logic;
@@ -63,8 +63,12 @@ end process;
     
 -------------------------------------------------------------------
 kicker: process(clk)
+    variable line0 : line;
 begin
     if clk'event and clk = '1' then
+        write( line0, String'("din:"));
+        write( line0, din);
+        writeline( output, line0);
         data0 <= data0(30 downto 0) & data0(31);
         data1 <= data1(30 downto 0) & data1(31);
         data2 <= data2(30 downto 0) & data2(31);

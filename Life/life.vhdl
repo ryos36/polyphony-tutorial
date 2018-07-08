@@ -99,7 +99,7 @@ begin
                         if d101_d(0) = '0' then
                             sum01 <= "001";
                         else
-                            sum01 <= "100";
+                            sum01 <= "100"; -- "011"
                         end if;
                     else
                             sum01 <= "010";
