@@ -15,16 +15,7 @@ end life_show_tb;
  
 architecture sim of life_show_tb is
 
-component life
-    port(
-        clk  : in std_logic;
-        din  : in std_logic_vector(2 downto 0);
-        mark_in : in std_logic;
-        dout : out std_logic;
-        mark_out : out std_logic
-    );
-end component;
-
+----------------------------------------------------------------
 component space_is_the_place
     port(
         clk  : in std_logic;
@@ -39,10 +30,34 @@ component space_is_the_place
     );
 end component;
 
+----------------------------------------------------------------
+component pattern_detector
+    port(
+        clk  : in std_logic;
+        din  : in std_logic_vector(2 downto 0);
+        dout  : out std_logic_vector(2 downto 0);
+        
+        mark_src : out std_logic
+    );
+end component;
+
+----------------------------------------------------------------
+component life
+    port(
+        clk  : in std_logic;
+        din  : in std_logic_vector(2 downto 0);
+        mark_in : in std_logic;
+        dout : out std_logic;
+        mark_out : out std_logic
+    );
+end component;
+
+----------------------------------------------------------------
     signal clk : std_logic;
 
     signal clk_for_life : std_logic;
     signal data_src : std_logic_vector(2 downto 0);
+    signal delayed_data_src : std_logic_vector(2 downto 0);
     signal mark_src : std_logic;
 
     signal data_result : std_logic;
@@ -52,17 +67,6 @@ end component;
 begin
 
 -------------------------------------------------------------------
-life0 : life
-port map (
-    clk => clk_for_life,
-
-    din => data_src,
-    mark_in => mark_src,
-    dout => data_result,
-    mark_out => mark_result
-);
-
--------------------------------------------------------------------
 space_is_the_place0 : space_is_the_place
 port map ( 
     clk => clk,
@@ -70,10 +74,32 @@ port map (
     clk_for_life => clk_for_life,
 
     data_src => data_src,
-    mark_src => mark_src,
+    --mark_src => mark_src,
 
     data_result => data_result,
     mark_result => mark_result
+);
+
+-------------------------------------------------------------------
+pattern_detector0 : pattern_detector
+port map (
+    clk => clk_for_life,
+
+    din => data_src,
+    dout => delayed_data_src,
+
+    mark_src => mark_src
+);
+
+-------------------------------------------------------------------
+life0 : life
+port map (
+    clk => clk_for_life,
+
+    din => delayed_data_src,
+    mark_in => mark_src,
+    dout => data_result,
+    mark_out => mark_result
 );
 
 -------------------------------------------------------------------
